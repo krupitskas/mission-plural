@@ -1,0 +1,30 @@
+# Auto-detect text files and normalize line endings
+* text=auto
+
+# Force LF on all text files (you're on macOS/Linux, collaborators might be on Windows)
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.md text eol=lf
+*.toml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.wgsl text eol=lf
+*.glsl text eol=lf
+*.rs text eol=lf
+
+# Binary files — don't diff, don't merge
+*.wasm binary
+*.png binary
+*.jpg binary
+*.hdr binary
+*.ktx2 binary
+*.glb binary
+*.gltf filter=lfs diff=lfs merge=lfs -text
+*.tar.gz binary
+
+# Lock files — don't bother diffing
+package-lock.json -diff
