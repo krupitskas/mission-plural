@@ -6,8 +6,12 @@
 export function createSphere(
   radius: number,
   latBands: number,
-  lonBands: number
-): { vertices: Float32Array; indices: Uint16Array; indexCount: number } {
+  lonBands: number,
+): {
+  vertices: Float32Array<ArrayBuffer>;
+  indices: Uint16Array<ArrayBuffer>;
+  indexCount: number;
+} {
   const verts: number[] = [];
   const idxs: number[] = [];
 
@@ -28,11 +32,8 @@ export function createSphere(
       const u = lon / lonBands;
       const v = lat / latBands;
 
-      // position
       verts.push(radius * nx, radius * ny, radius * nz);
-      // normal
       verts.push(nx, ny, nz);
-      // uv
       verts.push(u, v);
     }
   }

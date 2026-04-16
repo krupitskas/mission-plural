@@ -1,9 +1,12 @@
 import { Renderer } from "./renderer";
+import { UIOverlay } from "./ui";
+import "./ui/styles.css";
 
 async function main() {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
   const errorEl = document.getElementById("error") as HTMLDivElement;
-  const statsEl = document.getElementById("stats") as HTMLDivElement;
+  const ui = new UIOverlay();
+  const statsEl = ui.statsEl;
 
   const renderer = new Renderer(canvas);
   const ok = await renderer.init();

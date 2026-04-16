@@ -1,28 +1,23 @@
-import { Vec3, vec3 } from "./math";
+import { Vec3 } from "../math";
 
 export class OrbitCamera {
-  // Current state (smoothed)
   distance: number;
-  azimuth: number; // horizontal angle (radians)
-  elevation: number; // vertical angle (radians)
+  azimuth: number;
+  elevation: number;
 
-  // Target state (immediate input)
   private targetDistance: number;
   private targetAzimuth: number;
   private targetElevation: number;
 
-  // Constraints
   private minDist: number;
   private maxDist: number;
   private minElev = -Math.PI / 2 + 0.05;
   private maxElev = Math.PI / 2 - 0.05;
 
-  // Input state
   private isDragging = false;
   private lastX = 0;
   private lastY = 0;
 
-  // Smoothing factor (0 = instant, higher = smoother)
   private smoothing = 8;
 
   target: Vec3 = [0, 0, 0];

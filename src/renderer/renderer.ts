@@ -1,6 +1,6 @@
-import { Mat4, mat4 } from "./math";
+import { mat4 } from "../math";
 import { createSphere } from "./geometry";
-import { vertexShader, fragmentShader } from "./shaders";
+import { loadPlanetShaderSources } from "./shaders";
 import { OrbitCamera } from "./camera";
 
 export class Renderer {
@@ -42,7 +42,7 @@ export class Renderer {
     });
 
     this.createBuffers();
-    this.createPipeline();
+    await this.createPipeline();
     this.resize();
 
     window.addEventListener("resize", () => this.resize());
@@ -74,9 +74,10 @@ export class Renderer {
     });
   }
 
-  private createPipeline() {
-    const vertModule = this.device.createShaderModule({ code: vertexShader });
-    const fragModule = this.device.createShaderModule({ code: fragmentShader });
+  private async createPipeline() {
+    const { vertex, fragment } = await loadPlanetShaderSources();
+    const vertModule = this.device.createShaderModule({ code: vertex });
+    const fragModule = this.device.createShaderModule({ code: fragment });
 
     const bindGroupLayout = this.device.createBindGroupLayout({
       entries: [
@@ -105,9 +106,9 @@ export class Renderer {
             // Interleaved: pos(3) + normal(3) + uv(2) = 8 floats = 32 bytes
             arrayStride: 32,
             attributes: [
-              { shaderLocation: 0, offset: 0, format: "float32x3" }, // position
-              { shaderLocation: 1, offset: 12, format: "float32x3" }, // normal
-              { shaderLocation: 2, offset: 24, format: "float32x2" }, // uv
+              { shaderLocation: 0, offset: 0, format: "float32x3" },
+              { shaderLocation: 1, offset: 12, format: "float32x3" },
+              { shaderLocation: 2, offset: 24, format: "float32x2" },
             ],
           },
         ],
@@ -154,23 +155,20 @@ export class Renderer {
     const proj = mat4.perspective(Math.PI / 4, aspect, 0.01, 100);
     const view = mat4.lookAt(eye, this.camera.target, [0, 1, 0]);
 
-    // Slow Earth rotation
     let model = mat4.create();
     model = mat4.rotateY(model, this.time * 0.05);
-    // Axial tilt ~23.4 degrees
     model = mat4.rotateX(model, 23.4 * (Math.PI / 180));
 
     const mvp = mat4.multiply(proj, mat4.multiply(view, model));
 
-    // Write uniforms
     const uniformData = new ArrayBuffer(176);
     const f32 = new Float32Array(uniformData);
-    f32.set(mvp, 0); // offset 0: mvp
-    f32.set(model, 16); // offset 64: model
-    f32[32] = eye[0]; // offset 128: eye.x
+    f32.set(mvp, 0);
+    f32.set(model, 16);
+    f32[32] = eye[0];
     f32[33] = eye[1];
     f32[34] = eye[2];
-    f32[35] = this.time; // offset 140: time
+    f32[35] = this.time;
 
     this.device.queue.writeBuffer(this.uniformBuffer, 0, uniformData);
 
