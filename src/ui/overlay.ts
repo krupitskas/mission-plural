@@ -8,12 +8,18 @@ export class UIOverlay {
   readonly statsEl: HTMLDivElement;
 
   private readonly root: HTMLDivElement;
+  private readonly cameraTargetSelect: HTMLSelectElement;
   private readonly fileMenuButton: HTMLButtonElement;
   private readonly fileMenu: HTMLDivElement;
   private readonly scenePanel: HTMLDivElement;
   private readonly scenePanelDockButton: HTMLButtonElement;
   private readonly earthWindow: HTMLDivElement;
   private readonly earthToggleButton: HTMLButtonElement;
+  private readonly settingsToggleButton: HTMLButtonElement;
+  private readonly settingsWindow: HTMLDivElement;
+  private readonly msaaToggle: HTMLInputElement;
+  private readonly cameraTargetListeners = new Set<(targetId: string) => void>();
+  private readonly msaaListeners = new Set<(enabled: boolean) => void>();
   private scenePanelDocked = true;
 
   constructor() {
@@ -23,20 +29,26 @@ export class UIOverlay {
 
     document.body.appendChild(this.root);
 
+    this.cameraTargetSelect = this.require('[data-action="camera-target"]');
     this.fileMenuButton = this.require(".menu-trigger");
     this.fileMenu = this.require(".menu-dropdown");
     this.scenePanel = this.require('[data-window="scene"]');
     this.scenePanelDockButton = this.require('[data-action="dock-scene"]');
     this.earthWindow = this.require('[data-window="earth"]');
     this.earthToggleButton = this.require('[data-action="toggle-earth"]');
+    this.settingsToggleButton = this.require('[data-action="toggle-settings"]');
+    this.settingsWindow = this.require('[data-window="settings"]');
+    this.msaaToggle = this.require('[data-action="msaa-toggle"]');
     this.statsEl = this.require(".hud-stats");
 
     this.setupFileMenu();
     this.setupScenePanel();
     this.setupEarthWindow();
+    this.setupSettingsWindow();
 
     this.setSceneDocked(true);
     this.placeFloatingWindow(this.earthWindow, 364, 116);
+    this.placeFloatingWindow(this.settingsWindow, 696, 116);
 
     window.addEventListener("resize", () => {
       if (!this.scenePanelDocked) {
@@ -45,7 +57,37 @@ export class UIOverlay {
       if (!this.earthWindow.classList.contains("is-hidden")) {
         this.clampWindow(this.earthWindow);
       }
+      if (!this.settingsWindow.classList.contains("is-hidden")) {
+        this.clampWindow(this.settingsWindow);
+      }
     });
+  }
+
+  onCameraTargetChange(listener: (targetId: string) => void) {
+    this.cameraTargetListeners.add(listener);
+  }
+
+  onMsaaChange(listener: (enabled: boolean) => void) {
+    this.msaaListeners.add(listener);
+  }
+
+  setCameraTargets(
+    targets: Array<{ id: string; label: string }>,
+    selectedTargetId: string,
+  ) {
+    this.cameraTargetSelect.replaceChildren(
+      ...targets.map((target) => {
+        const option = document.createElement("option");
+        option.value = target.id;
+        option.textContent = target.label;
+        option.selected = target.id === selectedTargetId;
+        return option;
+      }),
+    );
+  }
+
+  setMsaaEnabled(enabled: boolean) {
+    this.msaaToggle.checked = enabled;
   }
 
   private setupFileMenu() {
@@ -82,6 +124,12 @@ export class UIOverlay {
   }
 
   private setupScenePanel() {
+    this.cameraTargetSelect.addEventListener("change", () => {
+      for (const listener of this.cameraTargetListeners) {
+        listener(this.cameraTargetSelect.value);
+      }
+    });
+
     this.scenePanelDockButton.addEventListener("click", () => {
       if (this.scenePanelDocked) {
         const rect = this.scenePanel.getBoundingClientRect();
@@ -133,6 +181,36 @@ export class UIOverlay {
     });
   }
 
+  private setupSettingsWindow() {
+    this.settingsToggleButton.addEventListener("click", () => {
+      const isHidden = this.settingsWindow.classList.contains("is-hidden");
+      this.setSettingsWindowVisible(isHidden);
+    });
+
+    const closeButton = this.require<HTMLButtonElement>(
+      '[data-action="close-settings"]',
+    );
+    closeButton.addEventListener("click", () => this.setSettingsWindowVisible(false));
+
+    this.msaaToggle.addEventListener("change", () => {
+      for (const listener of this.msaaListeners) {
+        listener(this.msaaToggle.checked);
+      }
+    });
+
+    makeDraggable(this.settingsWindow, {
+      onDragMove: ({ event, offsetX, offsetY }) => {
+        const { left, top } = this.getClampedPosition(
+          this.settingsWindow,
+          event.clientX - offsetX,
+          event.clientY - offsetY,
+        );
+        this.settingsWindow.style.left = `${left}px`;
+        this.settingsWindow.style.top = `${top}px`;
+      },
+    });
+  }
+
   private setSceneDocked(
     docked: boolean,
     left = WINDOW_MARGIN,
@@ -162,6 +240,15 @@ export class UIOverlay {
 
     if (visible) {
       this.clampWindow(this.earthWindow);
+    }
+  }
+
+  private setSettingsWindowVisible(visible: boolean) {
+    this.settingsWindow.classList.toggle("is-hidden", !visible);
+    this.settingsToggleButton.setAttribute("aria-pressed", String(visible));
+
+    if (visible) {
+      this.clampWindow(this.settingsWindow);
     }
   }
 

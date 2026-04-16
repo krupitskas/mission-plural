@@ -8,6 +8,10 @@ export const vec3 = {
     return [x, y, z];
   },
 
+  clone(v: Vec3): Vec3 {
+    return [v[0], v[1], v[2]];
+  },
+
   add(a: Vec3, b: Vec3): Vec3 {
     return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
   },
@@ -18,6 +22,10 @@ export const vec3 = {
 
   scale(v: Vec3, s: number): Vec3 {
     return [v[0] * s, v[1] * s, v[2] * s];
+  },
+
+  distance(a: Vec3, b: Vec3): number {
+    return vec3.length(vec3.sub(a, b));
   },
 
   length(v: Vec3): number {
@@ -49,6 +57,10 @@ export const vec3 = {
       a[2] + (b[2] - a[2]) * t,
     ];
   },
+
+  scaleAndAdd(a: Vec3, b: Vec3, s: number): Vec3 {
+    return [a[0] + b[0] * s, a[1] + b[1] * s, a[2] + b[2] * s];
+  },
 };
 
 export const mat4 = {
@@ -66,6 +78,44 @@ export const mat4 = {
     m[10] = far / (near - far);
     m[11] = -1;
     m[14] = (near * far) / (near - far);
+    return m;
+  },
+
+  fromTranslation(v: Vec3): Mat4 {
+    const m = mat4.create();
+    m[12] = v[0];
+    m[13] = v[1];
+    m[14] = v[2];
+    return m;
+  },
+
+  fromScaling(v: Vec3): Mat4 {
+    const m = new Float32Array(16);
+    m[0] = v[0];
+    m[5] = v[1];
+    m[10] = v[2];
+    m[15] = 1;
+    return m;
+  },
+
+  fromBasis(right: Vec3, up: Vec3, forward: Vec3, translation: Vec3): Mat4 {
+    const m = new Float32Array(16);
+    m[0] = right[0];
+    m[1] = right[1];
+    m[2] = right[2];
+    m[3] = 0;
+    m[4] = up[0];
+    m[5] = up[1];
+    m[6] = up[2];
+    m[7] = 0;
+    m[8] = forward[0];
+    m[9] = forward[1];
+    m[10] = forward[2];
+    m[11] = 0;
+    m[12] = translation[0];
+    m[13] = translation[1];
+    m[14] = translation[2];
+    m[15] = 1;
     return m;
   },
 
@@ -114,6 +164,15 @@ export const mat4 = {
     const s = Math.sin(angle);
     r[5] = c; r[9] = -s;
     r[6] = s; r[10] = c;
+    return mat4.multiply(m, r);
+  },
+
+  rotateZ(m: Mat4, angle: number): Mat4 {
+    const r = mat4.create();
+    const c = Math.cos(angle);
+    const s = Math.sin(angle);
+    r[0] = c; r[4] = -s;
+    r[1] = s; r[5] = c;
     return mat4.multiply(m, r);
   },
 };

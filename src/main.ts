@@ -1,4 +1,5 @@
 import { Renderer } from "./renderer";
+import type { CameraTargetId } from "./simulation";
 import { UIOverlay } from "./ui";
 import "./ui/styles.css";
 
@@ -20,6 +21,20 @@ async function main() {
     `;
     return;
   }
+
+  ui.setCameraTargets(
+    renderer.getCameraTargetOptions(),
+    renderer.getSelectedCameraTarget(),
+  );
+  ui.onCameraTargetChange((targetId) =>
+    renderer.setCameraTarget(targetId as CameraTargetId),
+  );
+  ui.setMsaaEnabled(renderer.getMsaaEnabled());
+  ui.onMsaaChange((enabled) => {
+    void renderer.setMsaaEnabled(enabled).then(() => {
+      ui.setMsaaEnabled(renderer.getMsaaEnabled());
+    });
+  });
 
   // Frame loop
   let lastTime = performance.now();
@@ -45,7 +60,9 @@ async function main() {
     const cam = renderer.camera;
     statsEl.textContent = [
       `${fps} fps`,
-      `alt: ${((cam.distance - 1.0) * 6371).toFixed(0)} km`,
+      `focus: ${renderer.getFocusLabel()}`,
+      `alt: ${renderer.getCameraAltitudeKm().toFixed(0)} km`,
+      `msaa: x${renderer.getMsaaSampleCount()}`,
       `drag to orbit · scroll to zoom`,
     ].join(" · ");
 

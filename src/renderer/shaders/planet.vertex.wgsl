@@ -1,8 +1,9 @@
 struct Uniforms {
   mvp: mat4x4<f32>,
   model: mat4x4<f32>,
-  eye: vec3<f32>,
-  time: f32,
+  eyeTime: vec4<f32>,
+  baseColor: vec4<f32>,
+  material: vec4<f32>,
 };
 
 @group(0) @binding(0) var<uniform> u: Uniforms;
@@ -12,6 +13,7 @@ struct VSOut {
   @location(0) normal: vec3<f32>,
   @location(1) worldPos: vec3<f32>,
   @location(2) uv: vec2<f32>,
+  @location(3) localPos: vec3<f32>,
 };
 
 struct VSIn {
@@ -28,5 +30,6 @@ fn main(input: VSIn) -> VSOut {
   out.normal = (u.model * vec4(input.normal, 0.0)).xyz;
   out.worldPos = worldPos;
   out.uv = input.uv;
+  out.localPos = input.position;
   return out;
 }

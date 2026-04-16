@@ -13,6 +13,9 @@ export const uiMarkup = `
           </button>
         </div>
       </div>
+      <button class="menu-trigger" type="button" data-action="toggle-settings">
+        Settings
+      </button>
     </div>
     <div class="menu-title">MISSION PLURAL</div>
   </header>
@@ -48,6 +51,10 @@ export const uiMarkup = `
 
       <section class="window-section">
         <div class="section-title">Camera</div>
+        <label class="stack-field">
+          <span>Focus target</span>
+          <select data-action="camera-target"></select>
+        </label>
         <label class="stack-field">
           <span>Exposure</span>
           <input type="range" min="0" max="100" value="62" />
@@ -101,6 +108,29 @@ export const uiMarkup = `
         <label class="field-row">
           <span>Show periapsis</span>
           <input type="checkbox" checked />
+        </label>
+      </section>
+    </div>
+  </section>
+
+  <section class="window-panel settings-window is-hidden" data-window="settings">
+    <div class="window-header" data-drag-handle>
+      <div>
+        <div class="window-eyebrow">Render</div>
+        <div class="window-title">Settings</div>
+      </div>
+      <div class="window-actions">
+        <button class="window-action" type="button" data-action="close-settings">
+          Close
+        </button>
+      </div>
+    </div>
+    <div class="window-body">
+      <section class="window-section">
+        <div class="section-title">Anti-Aliasing</div>
+        <label class="field-row">
+          <span>Enable Maximum MSAA</span>
+          <input type="checkbox" data-action="msaa-toggle" checked />
         </label>
       </section>
     </div>

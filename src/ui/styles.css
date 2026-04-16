@@ -42,7 +42,8 @@ canvas {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -185,6 +186,10 @@ input {
   width: 300px;
 }
 
+.settings-window {
+  width: 280px;
+}
+
 .window-header {
   display: flex;
   align-items: center;
@@ -262,6 +267,15 @@ input {
 input[type="range"] {
   width: 100%;
   accent-color: var(--accent);
+}
+
+select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
 }
 
 input[type="checkbox"] {

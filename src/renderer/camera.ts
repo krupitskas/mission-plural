@@ -1,13 +1,15 @@
-import { Vec3 } from "../math";
+import { Vec3, vec3 } from "../math";
 
 export class OrbitCamera {
   distance: number;
   azimuth: number;
   elevation: number;
+  target: Vec3 = [0, 0, 0];
 
   private targetDistance: number;
   private targetAzimuth: number;
   private targetElevation: number;
+  private desiredTarget: Vec3 = [0, 0, 0];
 
   private minDist: number;
   private maxDist: number;
@@ -15,12 +17,11 @@ export class OrbitCamera {
   private maxElev = Math.PI / 2 - 0.05;
 
   private isDragging = false;
+  private activePointerId: number | null = null;
   private lastX = 0;
   private lastY = 0;
 
   private smoothing = 8;
-
-  target: Vec3 = [0, 0, 0];
 
   constructor(
     distance: number,
@@ -37,15 +38,23 @@ export class OrbitCamera {
   }
 
   attach(canvas: HTMLCanvasElement) {
+    canvas.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+    });
+
     canvas.addEventListener("pointerdown", (e) => {
+      if (e.button !== 2) {
+        return;
+      }
       this.isDragging = true;
+      this.activePointerId = e.pointerId;
       this.lastX = e.clientX;
       this.lastY = e.clientY;
       canvas.setPointerCapture(e.pointerId);
     });
 
     canvas.addEventListener("pointermove", (e) => {
-      if (!this.isDragging) return;
+      if (!this.isDragging || e.pointerId !== this.activePointerId) return;
       const dx = e.clientX - this.lastX;
       const dy = e.clientY - this.lastY;
       this.lastX = e.clientX;
@@ -60,7 +69,16 @@ export class OrbitCamera {
     });
 
     canvas.addEventListener("pointerup", (e) => {
+      if (e.pointerId !== this.activePointerId) return;
       this.isDragging = false;
+      this.activePointerId = null;
+      canvas.releasePointerCapture(e.pointerId);
+    });
+
+    canvas.addEventListener("pointercancel", (e) => {
+      if (e.pointerId !== this.activePointerId) return;
+      this.isDragging = false;
+      this.activePointerId = null;
       canvas.releasePointerCapture(e.pointerId);
     });
 
@@ -83,6 +101,24 @@ export class OrbitCamera {
     this.distance += (this.targetDistance - this.distance) * t;
     this.azimuth += (this.targetAzimuth - this.azimuth) * t;
     this.elevation += (this.targetElevation - this.elevation) * t;
+    this.target = vec3.lerp(this.target, this.desiredTarget, t);
+  }
+
+  setTarget(target: Vec3, immediate = false) {
+    this.desiredTarget = vec3.clone(target);
+    if (immediate) {
+      this.target = vec3.clone(target);
+    }
+  }
+
+  focusOn(target: Vec3, distance: number, minDist: number, maxDist: number) {
+    this.minDist = minDist;
+    this.maxDist = maxDist;
+    this.target = vec3.clone(target);
+    this.desiredTarget = vec3.clone(target);
+    const clampedDistance = Math.max(this.minDist, Math.min(this.maxDist, distance));
+    this.distance = clampedDistance;
+    this.targetDistance = clampedDistance;
   }
 
   getEye(): Vec3 {
